@@ -6,7 +6,9 @@ import (
 	"os"
 	"strings"
 
+	"github.com/ArdaGnsrn/opsvault/internal/buildinfo"
 	"github.com/ArdaGnsrn/opsvault/internal/ui"
+	"github.com/ArdaGnsrn/opsvault/internal/updater"
 	"github.com/fatih/color"
 	"github.com/lmittmann/tint"
 	"github.com/mattn/go-isatty"
@@ -18,8 +20,24 @@ var cfgFile string
 var rootCmd = &cobra.Command{
 	Use:          "opsvault",
 	Short:        "Lightweight database backup tool with rclone storage",
-	Long:         ui.Cyan.Sprint("OpsVault") + " — automated database backups with rclone storage and systemd integration.",
+	Long:         ui.Cyan.Sprint("OpsVault") + " — automated database backups with rclone storage and systemd integration.\n  " + ui.Dim.Sprint("https://github.com/ArdaGnsrn/opsvault"),
 	SilenceUsage: true,
+	PersistentPostRun: func(cmd *cobra.Command, args []string) {
+		// Skip update notice for the version command (it shows its own)
+		// and for non-TTY environments (scripts, systemd)
+		if cmd.Name() == "version" {
+			return
+		}
+		isTTY := isatty.IsTerminal(os.Stdout.Fd()) || isatty.IsCygwinTerminal(os.Stdout.Fd())
+		if !isTTY {
+			return
+		}
+		latest := updater.LatestVersion()
+		if updater.IsNewer(buildinfo.Version, latest) {
+			fmt.Println()
+			fmt.Println(ui.Warn(fmt.Sprintf("New version available: %s → run: curl -fsSL https://get.opsvault.dev | sudo bash", latest)))
+		}
+	},
 }
 
 func Execute() {

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/ArdaGnsrn/opsvault/internal/config"
+	"github.com/ArdaGnsrn/opsvault/internal/history"
 	"github.com/ArdaGnsrn/opsvault/internal/notify"
 	"github.com/ArdaGnsrn/opsvault/internal/storage"
 )
@@ -105,7 +106,29 @@ func (m *Manager) runOne(ctx context.Context, db config.DatabaseConfig) Result {
 		}
 	}
 
+	m.recordHistory(start, result)
 	return result
+}
+
+func (m *Manager) recordHistory(start time.Time, r Result) {
+	e := history.Entry{
+		Database:  r.Database,
+		StartedAt: start,
+		Duration:  r.Duration.Seconds(),
+		FilePath:  r.Path,
+	}
+	if r.Path != "" {
+		if fi, err := os.Stat(r.Path); err == nil {
+			e.FileSize = fi.Size()
+		}
+	}
+	if r.Err != nil {
+		e.Status = history.StatusFailed
+		e.Error = r.Err.Error()
+	} else {
+		e.Status = history.StatusSuccess
+	}
+	_ = history.Append(m.cfg.BackupDir, e)
 }
 
 func (m *Manager) upload(ctx context.Context, db config.DatabaseConfig, localPath string, t time.Time) error {

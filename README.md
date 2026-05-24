@@ -1,5 +1,8 @@
 # OpsVault
 
+[![GitHub release](https://img.shields.io/github/v/release/ArdaGnsrn/opsvault)](https://github.com/ArdaGnsrn/opsvault/releases)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 Lightweight database backup tool for Linux servers. Dumps MySQL and PostgreSQL databases, compresses them, uploads via rclone, runs as a systemd service, and sends Telegram or email notifications — all from a single YAML file.
 
 ## Install
@@ -78,8 +81,11 @@ Full config reference: [opsvault.dev/docs/configuration](https://opsvault.dev/do
 | Command | Description |
 |---|---|
 | `opsvault backup run` | Run all enabled backups immediately |
-| `opsvault backup run --name myapp` | Run a single database backup |
+| `opsvault backup run myapp` | Run a single database backup |
 | `opsvault backup list` | List local backup files |
+| `opsvault backup history` | Show backup history (success/failure log) |
+| `opsvault backup history --db myapp --limit 20` | Filter history by database |
+| `opsvault restore run --name myapp --file backup.sql.gz` | Restore a database from a backup file |
 | `opsvault config init` | Create default config at `/etc/opsvault/config.yaml` |
 | `opsvault config validate` | Validate the config file |
 | `opsvault service install` | Install and enable the systemd service |
