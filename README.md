@@ -94,6 +94,7 @@ Full config reference: [opsvault.dev/docs/configuration](https://opsvault.dev/do
 | `opsvault restore run --name myapp --file backup.sql.gz` | Restore a database from a backup file |
 | `opsvault config init` | Create default config at `/etc/opsvault/config.yaml` |
 | `opsvault config validate` | Validate the config file |
+| `opsvault config wizard` | Interactive terminal wizard to create or edit the config |
 | `opsvault service install` | Install and enable the systemd service |
 | `opsvault service uninstall` | Disable and remove the systemd service |
 | `opsvault service start` | Start the service |

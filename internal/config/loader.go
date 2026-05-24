@@ -59,6 +59,39 @@ func applyDefaults(cfg *Config) {
 	}
 }
 
+// LoadRaw loads config without applying env overrides (used by the wizard).
+func LoadRaw(path string) (*Config, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("reading config file: %w", err)
+	}
+	var cfg Config
+	if err := yaml.Unmarshal(data, &cfg); err != nil {
+		return nil, fmt.Errorf("parsing config file: %w", err)
+	}
+	applyDefaults(&cfg)
+	return &cfg, nil
+}
+
+// Defaults returns a new Config populated with default values.
+func Defaults() *Config {
+	cfg := &Config{Version: 1}
+	applyDefaults(cfg)
+	return cfg
+}
+
+// WriteFile marshals cfg to YAML and writes it to path (mode 0640).
+func WriteFile(path string, cfg *Config) error {
+	if cfg.Version == 0 {
+		cfg.Version = 1
+	}
+	data, err := yaml.Marshal(cfg)
+	if err != nil {
+		return fmt.Errorf("marshaling config: %w", err)
+	}
+	return os.WriteFile(path, data, 0640)
+}
+
 func applyEnvOverrides(cfg *Config) {
 	for i := range cfg.Databases {
 		if cfg.Databases[i].PasswordEnv != "" {
