@@ -5,7 +5,7 @@ Lightweight database backup tool for Linux servers. Dumps MySQL and PostgreSQL d
 ## Install
 
 ```bash
-sudo bash <(curl -fsSL https://get.opsvault.dev)
+curl -fsSL https://get.opsvault.dev | sudo bash
 ```
 
 The installer downloads the binary, optionally installs `pg_dump`, `mysqldump`, and `rclone`, creates the config, and sets up the systemd service.
