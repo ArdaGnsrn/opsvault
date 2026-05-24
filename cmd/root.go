@@ -1,0 +1,89 @@
+package cmd
+
+import (
+	"fmt"
+	"log/slog"
+	"os"
+	"strings"
+
+	"github.com/ArdaGnsrn/opsvault/internal/ui"
+	"github.com/fatih/color"
+	"github.com/lmittmann/tint"
+	"github.com/mattn/go-isatty"
+	"github.com/spf13/cobra"
+)
+
+var cfgFile string
+
+var rootCmd = &cobra.Command{
+	Use:          "opsvault",
+	Short:        "Lightweight database backup tool with rclone storage",
+	Long:         ui.Cyan.Sprint("OpsVault") + " — automated database backups with rclone storage and systemd integration.",
+	SilenceUsage: true,
+}
+
+func Execute() {
+	if err := rootCmd.Execute(); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+}
+
+func init() {
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "/etc/opsvault/config.yaml", "path to config file")
+	rootCmd.CompletionOptions.HiddenDefaultCmd = true
+	setHelpTemplate()
+}
+
+func setHelpTemplate() {
+	bold := color.New(color.Bold).SprintFunc()
+	cyan := color.New(color.FgCyan, color.Bold).SprintFunc()
+	dim := color.New(color.Faint).SprintFunc()
+
+	cobra.AddTemplateFunc("boldText", bold)
+	cobra.AddTemplateFunc("cyanText", cyan)
+	cobra.AddTemplateFunc("dimText", dim)
+	cobra.AddTemplateFunc("cmdPad", func(name string, pad int) string {
+		return cyan(name) + strings.Repeat(" ", pad-len(name))
+	})
+
+	rootCmd.SetHelpTemplate(`{{with .Long}}{{.}}
+
+{{end}}` + bold("Usage:") + `
+  {{.UseLine}}{{if .HasAvailableSubCommands}} [command]{{end}}
+{{if .HasAvailableSubCommands}}
+` + bold("Commands:") + `
+{{range .Commands}}{{if .IsAvailableCommand}}  {{cmdPad .Name .NamePadding}}  {{dimText .Short}}
+{{end}}{{end}}{{end}}{{if .HasAvailableLocalFlags}}
+` + bold("Flags:") + `
+{{.LocalFlags.FlagUsages | trimRightSpace}}
+{{end}}{{if .HasAvailableInheritedFlags}}` + bold("Global Flags:") + `
+{{.InheritedFlags.FlagUsages | trimRightSpace}}
+{{end}}{{if .HasAvailableSubCommands}}{{dimText (printf "Use \"%s [command] --help\" for more information." .CommandPath)}}
+{{end}}`)
+}
+
+func getLogger(level, format string) *slog.Logger {
+	var lvl slog.Level
+	switch level {
+	case "debug":
+		lvl = slog.LevelDebug
+	case "warn":
+		lvl = slog.LevelWarn
+	case "error":
+		lvl = slog.LevelError
+	default:
+		lvl = slog.LevelInfo
+	}
+
+	isTTY := isatty.IsTerminal(os.Stderr.Fd()) || isatty.IsCygwinTerminal(os.Stderr.Fd())
+
+	if format == "json" || !isTTY {
+		return slog.New(slog.NewJSONHandler(os.Stderr, &slog.HandlerOptions{Level: lvl}))
+	}
+
+	return slog.New(tint.NewHandler(os.Stderr, &tint.Options{
+		Level:      lvl,
+		TimeFormat: "15:04:05",
+	}))
+}
