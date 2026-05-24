@@ -16,6 +16,7 @@ var versionCmd = &cobra.Command{
 		fmt.Printf("opsvault %s (commit: %s, built: %s)\n",
 			buildinfo.Version, buildinfo.Commit, buildinfo.BuildDate)
 		fmt.Println(ui.Dim.Sprint("  https://github.com/ArdaGnsrn/opsvault"))
+		fmt.Println(ui.Dim.Sprint("  ☕ https://buymeacoffee.com/ardagnsrn"))
 
 		fmt.Print(ui.Info("Checking for updates...") + "\r")
 		latest := updater.LatestVersion()
