@@ -31,7 +31,7 @@ chmod +x /usr/local/bin/opsvault
 
 ```bash
 opsvault config init        # create /etc/opsvault/config.yaml
-nano /etc/opsvault/config.yaml
+opsvault config wizard      # interactive TUI to fill in databases, storage, notifications
 opsvault config validate    # check for errors
 opsvault backup run         # test a backup manually
 opsvault service install    # install as systemd service
