@@ -2,7 +2,12 @@
 
 [![GitHub release](https://img.shields.io/github/v/release/ArdaGnsrn/opsvault)](https://github.com/ArdaGnsrn/opsvault/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-ffdd00?logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/ardagnsrn)
+
+## ☕ Buy me a coffee
+
+Whether you use this project, have learned something from it, or just like it, please consider supporting it by buying me a coffee, so I can dedicate more time on open-source projects like this :)
+
+<a href="https://www.buymeacoffee.com/ardagnsrn" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: auto !important;width: auto !important;" ></a>
 
 Lightweight database backup tool for Linux servers. Dumps MySQL and PostgreSQL databases, compresses them, uploads via rclone, runs as a systemd service, and sends Telegram or email notifications — all from a single YAML file.
 
@@ -145,12 +150,6 @@ Output goes to `dist/`.
 - `rclone` — if uploading to remote storage
 
 Run `opsvault doctor` to check which tools are present.
-
-## ☕ Buy me a coffee
-
-Whether you use this project, have learned something from it, or just like it, please consider supporting it by buying me a coffee, so I can dedicate more time on open-source projects like this :)
-
-<a href="https://www.buymeacoffee.com/ardagnsrn" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: auto !important;width: auto !important;" ></a>
 
 ## License
 
