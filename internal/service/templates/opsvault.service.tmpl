@@ -1,0 +1,21 @@
+[Unit]
+Description=OpsVault Database Backup Service
+After=network.target
+
+[Service]
+Type=simple
+User=root
+ExecStart={{.BinaryPath}} scheduler run --config {{.ConfigPath}}
+Restart=on-failure
+RestartSec=10s
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=opsvault
+
+# Security hardening
+ProtectSystem=strict
+ReadWritePaths={{.BackupDir}} /etc/opsvault
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
