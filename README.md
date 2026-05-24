@@ -2,6 +2,7 @@
 
 [![GitHub release](https://img.shields.io/github/v/release/ArdaGnsrn/opsvault)](https://github.com/ArdaGnsrn/opsvault/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-ffdd00?logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/ardagnsrn)
 
 Lightweight database backup tool for Linux servers. Dumps MySQL and PostgreSQL databases, compresses them, uploads via rclone, runs as a systemd service, and sends Telegram or email notifications — all from a single YAML file.
 
@@ -144,6 +145,12 @@ Output goes to `dist/`.
 - `rclone` — if uploading to remote storage
 
 Run `opsvault doctor` to check which tools are present.
+
+## Support
+
+OpsVault is free and open source, built and maintained by a single developer. If it saves you time or prevents a data disaster, a coffee goes a long way. ☕
+
+[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-ffdd00?logo=buy-me-a-coffee&logoColor=black&style=for-the-badge)](https://buymeacoffee.com/ardagnsrn)
 
 ## License
 
