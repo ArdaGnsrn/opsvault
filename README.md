@@ -146,11 +146,11 @@ Output goes to `dist/`.
 
 Run `opsvault doctor` to check which tools are present.
 
-## Support
+## ☕ Buy me a coffee
 
-OpsVault is free and open source, built and maintained by a single developer. If it saves you time or prevents a data disaster, a coffee goes a long way. ☕
+Whether you use this project, have learned something from it, or just like it, please consider supporting it by buying me a coffee, so I can dedicate more time on open-source projects like this :)
 
-[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-ffdd00?logo=buy-me-a-coffee&logoColor=black&style=for-the-badge)](https://buymeacoffee.com/ardagnsrn)
+<a href="https://www.buymeacoffee.com/ardagnsrn" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: auto !important;width: auto !important;" ></a>
 
 ## License
 
