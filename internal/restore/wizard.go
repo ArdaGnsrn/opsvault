@@ -2,9 +2,11 @@ package restore
 
 import (
 	"context"
+	"crypto/sha1"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path"
@@ -232,11 +234,6 @@ func pickRemoteFile(ctx context.Context, cfg *config.Config) (localPath string, 
 		}
 	}
 
-	td, tdErr := os.MkdirTemp("", "opsvault-restore-*")
-	if tdErr != nil {
-		return "", 0, time.Time{}, "", fmt.Errorf("creating temp dir: %w", tdErr)
-	}
-
 	remoteFileDir := path.Dir(selected.Path)
 	remoteFileName := path.Base(selected.Path)
 	var remoteDownloadDir string
@@ -249,27 +246,44 @@ func pickRemoteFile(ctx context.Context, cfg *config.Config) (localPath string, 
 		remoteDownloadDir = basePath + "/" + remoteFileDir
 	}
 
+	var remoteFilePath string
+	if remoteDownloadDir == "" {
+		remoteFilePath = r.Remote + ":" + remoteFileName
+	} else {
+		remoteFilePath = r.Remote + ":" + remoteDownloadDir + "/" + remoteFileName
+	}
+
+	cacheDir := restoreCacheDir()
+	_ = os.MkdirAll(cacheDir, 0700)
+	cacheFile := filepath.Join(cacheDir, remoteFileName)
+
+	fmt.Println(ui.Info("Checking remote hash..."))
+	if remoteHash, hErr := rcloneHashSHA1(ctx, r, remoteFilePath); hErr == nil && remoteHash != "" {
+		if localHash, lErr := sha1File(cacheFile); lErr == nil && localHash == remoteHash {
+			fmt.Println(ui.OK("Using cached file (SHA1 match)."))
+			fi, _ := os.Stat(cacheFile)
+			return cacheFile, fi.Size(), selected.ModTime, "", nil
+		}
+	}
+
 	fmt.Println(ui.Info("Downloading " + remoteFileName + "..."))
 
 	dlArgs := []string{"copy"}
 	if r.RcloneConfig != "" {
 		dlArgs = append(dlArgs, "--config", r.RcloneConfig)
 	}
-	dlArgs = append(dlArgs, r.Remote+":"+remoteDownloadDir, td, "--include", remoteFileName)
+	dlArgs = append(dlArgs, r.Remote+":"+remoteDownloadDir, cacheDir, "--include", remoteFileName)
 
 	if dlOut, dlErr := exec.CommandContext(ctx, "rclone", dlArgs...).CombinedOutput(); dlErr != nil {
-		os.RemoveAll(td)
 		return "", 0, time.Time{}, "", fmt.Errorf("rclone download failed: %w\n%s", dlErr, dlOut)
 	}
 
-	localFile := filepath.Join(td, remoteFileName)
-	fi, statErr := os.Stat(localFile)
+	fi, statErr := os.Stat(cacheFile)
 	if statErr != nil {
-		os.RemoveAll(td)
 		return "", 0, time.Time{}, "", fmt.Errorf("downloaded file not found: %w", statErr)
 	}
 
-	return localFile, fi.Size(), selected.ModTime, td, nil
+	return cacheFile, fi.Size(), selected.ModTime, "", nil
 }
 
 func pickDatabase(cfg *config.Config) (*config.DatabaseConfig, error) {
@@ -416,6 +430,43 @@ func maskPassword(s string) string {
 		return "(not set)"
 	}
 	return strings.Repeat("*", len(s))
+}
+
+func restoreCacheDir() string {
+	if d, err := os.UserCacheDir(); err == nil {
+		return filepath.Join(d, "opsvault", "restore")
+	}
+	return filepath.Join(os.TempDir(), "opsvault-restore-cache")
+}
+
+func rcloneHashSHA1(ctx context.Context, r config.RcloneConfig, remotePath string) (string, error) {
+	args := []string{"hashsum", "SHA1"}
+	if r.RcloneConfig != "" {
+		args = append(args, "--config", r.RcloneConfig)
+	}
+	args = append(args, remotePath)
+	out, err := exec.CommandContext(ctx, "rclone", args...).Output()
+	if err != nil {
+		return "", err
+	}
+	fields := strings.Fields(strings.TrimSpace(string(out)))
+	if len(fields) < 1 || fields[0] == "UNSUPPORTED" {
+		return "", nil
+	}
+	return fields[0], nil
+}
+
+func sha1File(p string) (string, error) {
+	f, err := os.Open(p)
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+	h := sha1.New()
+	if _, err := io.Copy(h, f); err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%x", h.Sum(nil)), nil
 }
 
 func rcloneBasePath(tpl string) string {
