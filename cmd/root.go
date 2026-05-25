@@ -11,6 +11,7 @@ import (
 
 	"github.com/ArdaGnsrn/opsvault/internal/buildinfo"
 	"github.com/ArdaGnsrn/opsvault/internal/config"
+	"github.com/ArdaGnsrn/opsvault/internal/envfile"
 	"github.com/ArdaGnsrn/opsvault/internal/ui"
 	"github.com/ArdaGnsrn/opsvault/internal/updater"
 	"github.com/fatih/color"
@@ -106,6 +107,7 @@ func loadConfig() (*config.Config, error) {
 		}
 		fmt.Println(ui.Info("Created default config at " + cfgFile))
 	}
+	_ = envfile.Load(envfile.PathFor(cfgFile))
 	cfg, err := config.LoadFile(cfgFile)
 	if err != nil {
 		return nil, fmt.Errorf("loading config: %w", err)

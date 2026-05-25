@@ -6,6 +6,8 @@ import (
 	"os"
 	"os/exec"
 	"text/template"
+
+	"github.com/ArdaGnsrn/opsvault/internal/envfile"
 )
 
 //go:embed templates/opsvault.service.tmpl
@@ -18,9 +20,10 @@ const (
 )
 
 type unitData struct {
-	BinaryPath string
-	ConfigPath string
-	BackupDir  string
+	BinaryPath  string
+	ConfigPath  string
+	BackupDir   string
+	EnvFilePath string
 }
 
 // Install writes the systemd unit file, reloads the daemon, and enables the service.
@@ -34,9 +37,10 @@ func Install(configPath, backupDir, binaryPath string) error {
 	}
 
 	data := unitData{
-		BinaryPath: binaryPath,
-		ConfigPath: configPath,
-		BackupDir:  backupDir,
+		BinaryPath:  binaryPath,
+		ConfigPath:  configPath,
+		BackupDir:   backupDir,
+		EnvFilePath: envfile.PathFor(configPath),
 	}
 
 	tmplBytes, err := templatesFS.ReadFile("templates/opsvault.service.tmpl")
