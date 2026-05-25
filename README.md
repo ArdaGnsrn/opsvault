@@ -6,7 +6,7 @@
 [![Go version](https://img.shields.io/github/go-mod/go-version/ArdaGnsrn/opsvault)](go.mod)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-Lightweight database backup tool for Linux servers. Dumps MySQL and PostgreSQL databases, compresses them, uploads via rclone, runs as a systemd service, and sends Telegram or email notifications — all from a single YAML file.
+Lightweight backup and DevOps tool for Linux servers. Backs up MySQL/PostgreSQL databases and any directory or file path, compresses and uploads via rclone, runs as a systemd service, and sends Telegram or email notifications — all from a single YAML file.
 
 ## ☕ Buy me a coffee
 
@@ -57,6 +57,13 @@ databases:
     excluded_tables:     # tables to skip (optional)
       - logs
       - sessions
+    enabled: true
+
+paths:
+  - name: app_uploads
+    path: /var/www/myapp/uploads
+    preset_excludes:     # node_modules, git, build, logs, temp, cache...
+      - cache
     enabled: true
 
 storage:
@@ -118,7 +125,8 @@ systemd → opsvault scheduler run
               ▼  (on cron schedule)
         backup.RunAll()
               │
-              ├─ mysqldump / pg_dump  →  gzip  →  /var/backups/opsvault/
+              ├─ mysqldump / pg_dump  →  gzip  →  .sql.gz
+              ├─ tar + gzip (paths)   →           .tar.gz
               ├─ rclone copy          →  remote storage
               ├─ retention cleanup    →  local + remote
               └─ Telegram / email notification
