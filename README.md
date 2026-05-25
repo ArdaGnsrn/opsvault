@@ -51,6 +51,9 @@ databases:
     user: backup_user
     password_env: DB_PASS
     database: myapp_prod
+    excluded_tables:     # tables to skip (optional)
+      - logs
+      - sessions
     enabled: true
 
 storage:
