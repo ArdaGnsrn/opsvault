@@ -55,13 +55,13 @@ var schedulerRunCmd = &cobra.Command{
 			}
 
 			if cfg.Retention.Local.Enabled {
-				if err := retention.ApplyLocal(cfg.Retention.Local, cfg.BackupDir, cfg.Databases, log); err != nil {
+				if err := retention.ApplyLocalWithPaths(cfg.Retention.Local, cfg.BackupDir, cfg.Databases, cfg.Paths, log); err != nil {
 					log.Warn("local retention error", "error", err)
 				}
 			}
 
 			if cfg.Retention.Remote.Enabled && cfg.Storage.Rclone.Enabled {
-				if err := retention.ApplyRemote(ctx, cfg.Retention, cfg.Storage.Rclone, cfg.Databases, log); err != nil {
+				if err := retention.ApplyRemoteWithPaths(ctx, cfg.Retention, cfg.Storage.Rclone, cfg.Databases, cfg.Paths, log); err != nil {
 					log.Warn("remote retention error", "error", err)
 				}
 			}

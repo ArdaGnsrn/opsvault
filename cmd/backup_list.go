@@ -21,9 +21,13 @@ var backupListCmd = &cobra.Command{
 			return err
 		}
 
-		matches, err := filepath.Glob(filepath.Join(cfg.BackupDir, "*.sql.gz"))
-		if err != nil {
-			return err
+		var matches []string
+		for _, pat := range []string{"*.sql.gz", "*.tar.gz"} {
+			m, err := filepath.Glob(filepath.Join(cfg.BackupDir, pat))
+			if err != nil {
+				return err
+			}
+			matches = append(matches, m...)
 		}
 
 		if len(matches) == 0 {
@@ -34,8 +38,8 @@ var backupListCmd = &cobra.Command{
 		sort.Sort(sort.Reverse(sort.StringSlice(matches)))
 
 		fmt.Println()
-		fmt.Printf("  %s\n\n", ui.Bold.Sprintf("%-44s  %8s  %s", "FILE", "SIZE", "MODIFIED"))
-		fmt.Println("  " + strings.Repeat("─", 68))
+		fmt.Printf("  %s\n\n", ui.Bold.Sprintf("%-44s  %8s  %-5s  %s", "FILE", "SIZE", "TYPE", "MODIFIED"))
+		fmt.Println("  " + strings.Repeat("─", 75))
 
 		for _, m := range matches {
 			info, err := os.Stat(m)
@@ -46,14 +50,20 @@ var backupListCmd = &cobra.Command{
 			modStr := ui.Dim.Sprint(info.ModTime().Format("2006-01-02 15:04"))
 			sizeStr := ui.Cyan.Sprintf("%8s", humanSize(info.Size()))
 
-			name := filepath.Base(m)
-			if age < 24*time.Hour {
-				name = ui.Green.Sprint(name)
-			} else {
-				name = ui.White.Sprint(name)
+			base := filepath.Base(m)
+			typeStr := "db"
+			if strings.HasSuffix(base, ".tar.gz") {
+				typeStr = "path"
 			}
 
-			fmt.Printf("  %-53s  %s  %s\n", name, sizeStr, modStr)
+			nameDisplay := base
+			if age < 24*time.Hour {
+				nameDisplay = ui.Green.Sprint(base)
+			} else {
+				nameDisplay = ui.White.Sprint(base)
+			}
+
+			fmt.Printf("  %-53s  %s  %-5s  %s\n", nameDisplay, sizeStr, ui.Dim.Sprint(typeStr), modStr)
 		}
 		fmt.Println()
 		return nil

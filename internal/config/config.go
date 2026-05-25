@@ -2,15 +2,24 @@ package config
 
 // Config is the root configuration structure.
 type Config struct {
-	Version   int              `yaml:"version"`
-	BackupDir string           `yaml:"backup_dir"`
-	Schedule  string           `yaml:"schedule"`
-	LogLevel  string           `yaml:"log_level"`
-	LogFormat string           `yaml:"log_format"`
-	Databases []DatabaseConfig `yaml:"databases"`
-	Storage   StorageConfig    `yaml:"storage"`
-	Retention RetentionConfig  `yaml:"retention"`
+	Version       int                `yaml:"version"`
+	BackupDir     string             `yaml:"backup_dir"`
+	Schedule      string             `yaml:"schedule"`
+	LogLevel      string             `yaml:"log_level"`
+	LogFormat     string             `yaml:"log_format"`
+	Databases     []DatabaseConfig   `yaml:"databases"`
+	Paths         []PathConfig       `yaml:"paths,omitempty"`
+	Storage       StorageConfig      `yaml:"storage"`
+	Retention     RetentionConfig    `yaml:"retention"`
 	Notifications NotificationConfig `yaml:"notifications"`
+}
+
+type PathConfig struct {
+	Name           string   `yaml:"name"`
+	Path           string   `yaml:"path"`
+	ExcludedPaths  []string `yaml:"excluded_paths,omitempty"`
+	PresetExcludes []string `yaml:"preset_excludes,omitempty"`
+	Enabled        bool     `yaml:"enabled"`
 }
 
 type DatabaseConfig struct {

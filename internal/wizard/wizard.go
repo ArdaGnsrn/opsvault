@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/ArdaGnsrn/opsvault/internal/backup"
 	"github.com/ArdaGnsrn/opsvault/internal/config"
 	"github.com/ArdaGnsrn/opsvault/internal/envfile"
 	"github.com/charmbracelet/huh"
@@ -37,6 +38,8 @@ func Run(cfgPath string) error {
 			_ = editGeneral(cfg)
 		case "databases":
 			_ = editDatabases(cfg, envVars)
+		case "paths":
+			_ = editPaths(cfg)
 		case "storage":
 			_ = editStorage(cfg)
 		case "retention":
@@ -79,11 +82,12 @@ func mainMenu(cfgPath string) (string, error) {
 				Options(
 					huh.NewOption("1  General Settings   (backup dir, schedule, log)", "general"),
 					huh.NewOption("2  Databases          (add / edit / remove)", "databases"),
-					huh.NewOption("3  Storage            (rclone remote)", "storage"),
-					huh.NewOption("4  Retention          (local & remote cleanup)", "retention"),
-					huh.NewOption("5  Notifications      (Telegram / Email)", "notifications"),
-					huh.NewOption("6  Save & Exit", "save"),
-					huh.NewOption("7  Exit without saving", "exit"),
+					huh.NewOption("3  Paths              (directory & file backups)", "paths"),
+					huh.NewOption("4  Storage            (rclone remote)", "storage"),
+					huh.NewOption("5  Retention          (local & remote cleanup)", "retention"),
+					huh.NewOption("6  Notifications      (Telegram / Email)", "notifications"),
+					huh.NewOption("7  Save & Exit", "save"),
+					huh.NewOption("8  Exit without saving", "exit"),
 				).
 				Value(&choice),
 		),
@@ -327,6 +331,137 @@ func editOneDatabase(db *config.DatabaseConfig, isNew bool, envVars map[string]s
 				huh.NewConfirm().
 					Title("Delete this database entry?").
 					Description("Removes it from the config (does not drop the database)").
+					Value(&del),
+			))
+			if err := delForm.Run(); err == nil && del {
+				return true, nil
+			}
+		}
+	}
+}
+
+// ── Paths ─────────────────────────────────────────────────────────────────────
+
+func editPaths(cfg *config.Config) error {
+	for {
+		opts := []huh.Option[int]{}
+		for i, p := range cfg.Paths {
+			label := fmt.Sprintf("%-20s  %s  %s", p.Name, preview(p.Path), yesNo(p.Enabled))
+			opts = append(opts, huh.NewOption(label, i))
+		}
+		opts = append(opts, huh.NewOption("+ Add path", -1))
+		opts = append(opts, huh.NewOption("← Back", -2))
+
+		var idx int
+		form := huh.NewForm(huh.NewGroup(
+			huh.NewSelect[int]().
+				Title("Paths").
+				Description("Directory and file backups · Select to edit").
+				Options(opts...).
+				Value(&idx),
+		))
+		if err := form.Run(); err != nil || idx == -2 {
+			return nil
+		}
+
+		if idx == -1 {
+			p := config.PathConfig{Enabled: true}
+			deleted, err := editOnePath(&p, true)
+			if err != nil || deleted {
+				continue
+			}
+			cfg.Paths = append(cfg.Paths, p)
+		} else {
+			deleted, err := editOnePath(&cfg.Paths[idx], false)
+			if err != nil {
+				continue
+			}
+			if deleted {
+				cfg.Paths = append(cfg.Paths[:idx], cfg.Paths[idx+1:]...)
+			}
+		}
+	}
+}
+
+func editOnePath(p *config.PathConfig, isNew bool) (deleted bool, err error) {
+	title := "Edit path"
+	if isNew {
+		title = "Add path"
+	}
+
+	for {
+		presetSummary := fmt.Sprintf("%d selected", len(p.PresetExcludes))
+		if len(p.PresetExcludes) == 0 {
+			presetSummary = "(none)"
+		}
+
+		opts := []huh.Option[string]{
+			huh.NewOption(fmt.Sprintf("Name              %s", preview(p.Name)), "name"),
+			huh.NewOption(fmt.Sprintf("Path              %s", preview(p.Path)), "path"),
+			huh.NewOption(fmt.Sprintf("Quick excludes    %s", presetSummary), "presets"),
+			huh.NewOption(fmt.Sprintf("Custom excludes   %s", preview(strings.Join(p.ExcludedPaths, ", "))), "excluded"),
+			huh.NewOption(fmt.Sprintf("Enabled           %s", yesNo(p.Enabled)), "enabled"),
+		}
+		if !isNew {
+			opts = append(opts, huh.NewOption("Delete this path", "delete"))
+		}
+		opts = append(opts, huh.NewOption("← Back", "back"))
+
+		var choice string
+		form := huh.NewForm(huh.NewGroup(
+			huh.NewSelect[string]().
+				Title(title).
+				Description("Select a field to edit").
+				Options(opts...).
+				Value(&choice),
+		))
+		if err := form.Run(); err != nil || choice == "back" {
+			return false, nil
+		}
+
+		switch choice {
+		case "name":
+			f := huh.NewForm(huh.NewGroup(huh.NewInput().Title("Name (unique identifier, e.g. myapp_uploads)").Value(&p.Name)))
+			_ = ignoreAbort(f.Run())
+		case "path":
+			f := huh.NewForm(huh.NewGroup(huh.NewInput().Title("Path to backup (e.g. /var/www/myapp/uploads)").Value(&p.Path)))
+			_ = ignoreAbort(f.Run())
+		case "presets":
+			presetOpts := make([]huh.Option[string], len(backup.PresetLabels))
+			for i, pl := range backup.PresetLabels {
+				presetOpts[i] = huh.NewOption(pl.Label, pl.Key)
+			}
+			selected := make([]string, len(p.PresetExcludes))
+			copy(selected, p.PresetExcludes)
+			f := huh.NewForm(huh.NewGroup(
+				huh.NewMultiSelect[string]().
+					Title("Quick excludes").
+					Description("Select patterns to skip automatically during backup").
+					Options(presetOpts...).
+					Value(&selected),
+			))
+			if err := ignoreAbort(f.Run()); err == nil {
+				p.PresetExcludes = selected
+			}
+		case "excluded":
+			current := strings.Join(p.ExcludedPaths, ", ")
+			f := huh.NewForm(huh.NewGroup(
+				huh.NewInput().
+					Title("Custom excluded paths").
+					Description("Comma-separated patterns (e.g. *.log, cache/, config/secrets.yaml)").
+					Value(&current),
+			))
+			_ = ignoreAbort(f.Run())
+			p.ExcludedPaths = splitTrimmed(current)
+		case "enabled":
+			f := huh.NewForm(huh.NewGroup(huh.NewConfirm().Title("Enable this path backup?").Value(&p.Enabled)))
+			_ = ignoreAbort(f.Run())
+		case "delete":
+			var del bool
+			delForm := huh.NewForm(huh.NewGroup(
+				huh.NewConfirm().
+					Title("Delete this path entry?").
+					Description("Removes it from the config (does not delete the actual files)").
 					Value(&del),
 			))
 			if err := delForm.Run(); err == nil && del {
