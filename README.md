@@ -1,6 +1,9 @@
 # OpsVault
 
 [![GitHub release](https://img.shields.io/github/v/release/ArdaGnsrn/opsvault)](https://github.com/ArdaGnsrn/opsvault/releases)
+[![Downloads](https://img.shields.io/github/downloads/ArdaGnsrn/opsvault/total)](https://github.com/ArdaGnsrn/opsvault/releases)
+[![Stars](https://img.shields.io/github/stars/ArdaGnsrn/opsvault)](https://github.com/ArdaGnsrn/opsvault/stargazers)
+[![Go version](https://img.shields.io/github/go-mod/go-version/ArdaGnsrn/opsvault)](go.mod)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 Lightweight database backup tool for Linux servers. Dumps MySQL and PostgreSQL databases, compresses them, uploads via rclone, runs as a systemd service, and sends Telegram or email notifications — all from a single YAML file.
