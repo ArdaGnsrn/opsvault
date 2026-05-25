@@ -35,7 +35,7 @@ func (t *TelegramNotifier) Send(ctx context.Context, msg Message) error {
 		icon = "❌"
 	}
 
-	text := fmt.Sprintf("%s *%s*\n\n%s", icon, escapeMarkdown(msg.Subject), msg.Body)
+	text := fmt.Sprintf("%s *%s*\n\n%s", icon, escapeMarkdown(msg.Subject), escapeMarkdown(msg.Body))
 
 	apiURL := fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage", t.token)
 
