@@ -4,7 +4,7 @@
 [![Downloads](https://img.shields.io/github/downloads/ArdaGnsrn/opsvault/total)](https://github.com/ArdaGnsrn/opsvault/releases)
 [![Stars](https://img.shields.io/github/stars/ArdaGnsrn/opsvault)](https://github.com/ArdaGnsrn/opsvault/stargazers)
 [![Go version](https://img.shields.io/github/go-mod/go-version/ArdaGnsrn/opsvault)](go.mod)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 
 Lightweight backup and DevOps tool for Linux servers. Backs up MySQL/PostgreSQL databases and any directory or file path, compresses and uploads via rclone, runs as a systemd service, and sends Telegram or email notifications — all from a single YAML file.
 
@@ -165,4 +165,6 @@ Run `opsvault doctor` to check which tools are present.
 
 ## License
 
-MIT
+Apache 2.0 — see [LICENSE](LICENSE) for details.
+
+See [NOTICE](NOTICE) for copyright and attribution information.
