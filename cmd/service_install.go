@@ -1,9 +1,6 @@
 package cmd
 
 import (
-	"fmt"
-
-	"github.com/ArdaGnsrn/opsvault/internal/config"
 	"github.com/ArdaGnsrn/opsvault/internal/service"
 	"github.com/spf13/cobra"
 )
@@ -14,9 +11,9 @@ var serviceInstallCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		binaryPath, _ := cmd.Flags().GetString("binary")
 
-		cfg, err := config.LoadFile(cfgFile)
+		cfg, err := loadConfig()
 		if err != nil {
-			return fmt.Errorf("loading config: %w", err)
+			return err
 		}
 
 		return service.Install(cfgFile, cfg.BackupDir, binaryPath)

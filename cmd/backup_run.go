@@ -18,9 +18,9 @@ var backupRunCmd = &cobra.Command{
 	Short: "Run a backup immediately",
 	Long:  "Run a backup for all enabled databases, or a specific named database.",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		cfg, err := config.LoadFile(cfgFile)
+		cfg, err := loadConfig()
 		if err != nil {
-			return fmt.Errorf("loading config: %w", err)
+			return err
 		}
 
 		log := getLogger(cfg.LogLevel, cfg.LogFormat)

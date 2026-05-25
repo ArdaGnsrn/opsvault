@@ -15,9 +15,9 @@ var reloadCmd = &cobra.Command{
 	Short: "Validate config and restart the service",
 	Long:  "Validates the config file, then restarts the opsvault systemd service if valid.",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		cfg, err := config.LoadFile(cfgFile)
+		cfg, err := loadConfig()
 		if err != nil {
-			return fmt.Errorf("loading config: %w", err)
+			return err
 		}
 
 		errs := config.Validate(cfg)

@@ -19,9 +19,9 @@ var schedulerRunCmd = &cobra.Command{
 	Short: "Run the backup scheduler daemon",
 	Long:  "Start the long-running scheduler daemon. Typically called by systemd via the service unit.",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		cfg, err := config.LoadFile(cfgFile)
+		cfg, err := loadConfig()
 		if err != nil {
-			return fmt.Errorf("loading config: %w", err)
+			return err
 		}
 
 		log := getLogger(cfg.LogLevel, cfg.LogFormat)

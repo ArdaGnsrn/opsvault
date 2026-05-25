@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ArdaGnsrn/opsvault/internal/config"
 	"github.com/ArdaGnsrn/opsvault/internal/ui"
 	"github.com/spf13/cobra"
 )
@@ -17,9 +16,9 @@ var backupListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List recent local backup files",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		cfg, err := config.LoadFile(cfgFile)
+		cfg, err := loadConfig()
 		if err != nil {
-			return fmt.Errorf("loading config: %w", err)
+			return err
 		}
 
 		matches, err := filepath.Glob(filepath.Join(cfg.BackupDir, "*.sql.gz"))

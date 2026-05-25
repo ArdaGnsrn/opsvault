@@ -1,12 +1,16 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
+	"io/fs"
 	"log/slog"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/ArdaGnsrn/opsvault/internal/buildinfo"
+	"github.com/ArdaGnsrn/opsvault/internal/config"
 	"github.com/ArdaGnsrn/opsvault/internal/ui"
 	"github.com/ArdaGnsrn/opsvault/internal/updater"
 	"github.com/fatih/color"
@@ -47,8 +51,19 @@ func Execute() {
 	}
 }
 
+func defaultConfigPath() string {
+	if os.Getuid() == 0 {
+		return "/etc/opsvault/config.yaml"
+	}
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "/etc/opsvault/config.yaml"
+	}
+	return filepath.Join(home, ".config", "opsvault", "config.yaml")
+}
+
 func init() {
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "/etc/opsvault/config.yaml", "path to config file")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", defaultConfigPath(), "path to config file")
 	rootCmd.CompletionOptions.HiddenDefaultCmd = true
 	setHelpTemplate()
 }
@@ -79,6 +94,23 @@ func setHelpTemplate() {
 {{.InheritedFlags.FlagUsages | trimRightSpace}}
 {{end}}{{if .HasAvailableSubCommands}}{{dimText (printf "Use \"%s [command] --help\" for more information." .CommandPath)}}
 {{end}}`)
+}
+
+func loadConfig() (*config.Config, error) {
+	if _, err := os.Stat(cfgFile); errors.Is(err, fs.ErrNotExist) {
+		if mkErr := os.MkdirAll(filepath.Dir(cfgFile), 0755); mkErr != nil {
+			return nil, fmt.Errorf("creating config directory: %w", mkErr)
+		}
+		if mkErr := config.WriteFile(cfgFile, config.Defaults()); mkErr != nil {
+			return nil, fmt.Errorf("creating default config: %w", mkErr)
+		}
+		fmt.Println(ui.Info("Created default config at " + cfgFile))
+	}
+	cfg, err := config.LoadFile(cfgFile)
+	if err != nil {
+		return nil, fmt.Errorf("loading config: %w", err)
+	}
+	return cfg, nil
 }
 
 func getLogger(level, format string) *slog.Logger {

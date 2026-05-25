@@ -25,9 +25,9 @@ var restoreRunCmd = &cobra.Command{
 	Example: `  opsvault restore run --name myapp --file /var/backups/opsvault/myapp_20240115_020000.sql.gz
   opsvault restore run --name myapp --file ./myapp_backup.sql.gz --yes`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		cfg, err := config.LoadFile(cfgFile)
+		cfg, err := loadConfig()
 		if err != nil {
-			return fmt.Errorf("loading config: %w", err)
+			return err
 		}
 
 		// Find the database config
