@@ -165,6 +165,12 @@ Run `opsvault doctor` to check which tools are present.
 
 ## License
 
-Apache 2.0 — see [LICENSE](LICENSE) for details.
+OpsVault is licensed under the Apache License 2.0.
 
-See [NOTICE](NOTICE) for copyright and attribution information.
+Copyright 2026 Arda Günsüren.
+
+Please retain the license and attribution notices when using, modifying, or redistributing this software.
+
+See [LICENSE](LICENSE) for the full license text and [NOTICE](NOTICE) for copyright, attribution, and disclaimer information.
+
+> **Disclaimer:** This software is provided "as is", without warranty of any kind. The authors and contributors shall not be held liable for any data loss, corruption, service interruption, or other damages arising from the use or inability to use this software. Use at your own risk. Always verify that your backups are complete and restorable before relying on them in a production environment.

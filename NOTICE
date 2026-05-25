@@ -5,3 +5,13 @@ OpsVault is an open-source backup and server automation tool
 created and maintained by Arda Günsüren.
 
 This product includes software developed by Arda Günsüren.
+
+DISCLAIMER
+
+THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED. THE AUTHORS AND CONTRIBUTORS SHALL NOT BE HELD LIABLE FOR ANY DATA
+LOSS, CORRUPTION, SERVICE INTERRUPTION, OR OTHER DAMAGES ARISING FROM THE USE
+OR INABILITY TO USE THIS SOFTWARE. USE AT YOUR OWN RISK.
+
+Always verify that your backups are complete and restorable before relying on
+them in a production environment.
