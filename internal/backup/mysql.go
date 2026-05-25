@@ -31,6 +31,9 @@ func (d *MySQLDumper) Dump(ctx context.Context, db config.DatabaseConfig, destPa
 		"--triggers",
 	}
 
+	for _, tbl := range db.ExcludedTables {
+		args = append(args, fmt.Sprintf("--ignore-table=%s.%s", db.Database, tbl))
+	}
 	if db.ExtraOpts != "" {
 		args = append(args, strings.Fields(db.ExtraOpts)...)
 	}

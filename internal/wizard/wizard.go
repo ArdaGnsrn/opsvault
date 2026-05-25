@@ -228,15 +228,16 @@ func editOneDatabase(db *config.DatabaseConfig, isNew bool, envVars map[string]s
 	for {
 		var choice string
 		opts := []huh.Option[string]{
-			huh.NewOption(fmt.Sprintf("Name          %s", preview(db.Name)), "name"),
-			huh.NewOption(fmt.Sprintf("Type          %s", db.Type), "type"),
-			huh.NewOption(fmt.Sprintf("Host          %s", preview(db.Host)), "host"),
-			huh.NewOption(fmt.Sprintf("Port          %s", portStr), "port"),
-			huh.NewOption(fmt.Sprintf("User          %s", preview(db.User)), "user"),
-			huh.NewOption(fmt.Sprintf("Database      %s", preview(db.Database)), "database"),
-			huh.NewOption(fmt.Sprintf("Password env  %s", preview(db.PasswordEnv)), "password_env"),
-			huh.NewOption(fmt.Sprintf("Extra opts    %s", preview(db.ExtraOpts)), "extra_opts"),
-			huh.NewOption(fmt.Sprintf("Enabled       %s", yesNo(db.Enabled)), "enabled"),
+			huh.NewOption(fmt.Sprintf("Name             %s", preview(db.Name)), "name"),
+			huh.NewOption(fmt.Sprintf("Type             %s", db.Type), "type"),
+			huh.NewOption(fmt.Sprintf("Host             %s", preview(db.Host)), "host"),
+			huh.NewOption(fmt.Sprintf("Port             %s", portStr), "port"),
+			huh.NewOption(fmt.Sprintf("User             %s", preview(db.User)), "user"),
+			huh.NewOption(fmt.Sprintf("Database         %s", preview(db.Database)), "database"),
+			huh.NewOption(fmt.Sprintf("Password env     %s", preview(db.PasswordEnv)), "password_env"),
+			huh.NewOption(fmt.Sprintf("Excluded tables  %s", preview(strings.Join(db.ExcludedTables, ", "))), "excluded_tables"),
+			huh.NewOption(fmt.Sprintf("Extra opts       %s", preview(db.ExtraOpts)), "extra_opts"),
+			huh.NewOption(fmt.Sprintf("Enabled          %s", yesNo(db.Enabled)), "enabled"),
 		}
 		if !isNew {
 			opts = append(opts, huh.NewOption("Delete this database", "delete"))
@@ -299,6 +300,16 @@ func editOneDatabase(db *config.DatabaseConfig, isNew bool, envVars map[string]s
 			))
 			_ = ignoreAbort(f.Run())
 			askEnvValue(db.PasswordEnv, envVars)
+		case "excluded_tables":
+			current := strings.Join(db.ExcludedTables, ", ")
+			f := huh.NewForm(huh.NewGroup(
+				huh.NewInput().
+					Title("Excluded tables").
+					Description("Comma-separated table names to skip during backup (e.g. logs, sessions, cache)").
+					Value(&current),
+			))
+			_ = ignoreAbort(f.Run())
+			db.ExcludedTables = splitTrimmed(current)
 		case "extra_opts":
 			f := huh.NewForm(huh.NewGroup(
 				huh.NewInput().

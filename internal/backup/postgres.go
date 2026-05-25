@@ -23,6 +23,9 @@ func (d *PostgresDumper) Dump(ctx context.Context, db config.DatabaseConfig, des
 		"--format=plain",
 	}
 
+	for _, tbl := range db.ExcludedTables {
+		args = append(args, fmt.Sprintf("--exclude-table=%s", tbl))
+	}
 	if db.ExtraOpts != "" {
 		args = append(args, strings.Fields(db.ExtraOpts)...)
 	}

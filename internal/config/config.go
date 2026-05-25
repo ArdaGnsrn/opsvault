@@ -14,16 +14,17 @@ type Config struct {
 }
 
 type DatabaseConfig struct {
-	Name        string `yaml:"name"`
-	Type        string `yaml:"type"` // mysql | postgres
-	Host        string `yaml:"host"`
-	Port        int    `yaml:"port"`
-	User        string `yaml:"user"`
-	Password    string `yaml:"password"`
-	PasswordEnv string `yaml:"password_env"`
-	Database    string `yaml:"database"`
-	ExtraOpts   string `yaml:"extra_opts"`
-	Enabled     bool   `yaml:"enabled"`
+	Name           string   `yaml:"name"`
+	Type           string   `yaml:"type"` // mysql | postgres
+	Host           string   `yaml:"host"`
+	Port           int      `yaml:"port"`
+	User           string   `yaml:"user"`
+	Password       string   `yaml:"password"`
+	PasswordEnv    string   `yaml:"password_env"`
+	Database       string   `yaml:"database"`
+	ExcludedTables []string `yaml:"excluded_tables,omitempty"`
+	ExtraOpts      string   `yaml:"extra_opts"`
+	Enabled        bool     `yaml:"enabled"`
 }
 
 type StorageConfig struct {
