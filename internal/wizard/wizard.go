@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/ArdaGnsrn/opsvault/internal/config"
+	"github.com/ArdaGnsrn/opsvault/internal/envfile"
 	"github.com/charmbracelet/huh"
 )
 
@@ -22,6 +23,10 @@ func Run(cfgPath string) error {
 		fmt.Println()
 	}
 
+	envPath := envfile.PathFor(cfgPath)
+	envVars := map[string]string{}
+	_ = envfile.Load(envPath)
+
 	for {
 		action, err := mainMenu(cfgPath)
 		if err != nil {
@@ -31,16 +36,19 @@ func Run(cfgPath string) error {
 		case "general":
 			_ = editGeneral(cfg)
 		case "databases":
-			_ = editDatabases(cfg)
+			_ = editDatabases(cfg, envVars)
 		case "storage":
 			_ = editStorage(cfg)
 		case "retention":
 			_ = editRetention(cfg)
 		case "notifications":
-			_ = editNotifications(cfg)
+			_ = editNotifications(cfg, envVars)
 		case "save":
 			if err := config.WriteFile(cfgPath, cfg); err != nil {
 				return fmt.Errorf("saving config: %w", err)
+			}
+			if err := envfile.Write(envPath, envVars); err != nil {
+				return fmt.Errorf("saving env file: %w", err)
 			}
 			fmt.Printf("\nConfig saved → %s\n", cfgPath)
 			return nil
@@ -152,7 +160,7 @@ func editGeneral(cfg *config.Config) error {
 
 // ── Databases ────────────────────────────────────────────────────────────────
 
-func editDatabases(cfg *config.Config) error {
+func editDatabases(cfg *config.Config, envVars map[string]string) error {
 	for {
 		opts := make([]huh.Option[int], 0, len(cfg.Databases)+2)
 		for i, db := range cfg.Databases {
@@ -186,14 +194,14 @@ func editDatabases(cfg *config.Config) error {
 				Host:    "127.0.0.1",
 				Port:    5432,
 			}
-			deleted, err := editOneDatabase(&db, true)
+			deleted, err := editOneDatabase(&db, true, envVars)
 			if err != nil || deleted {
 				continue
 			}
 			cfg.Databases = append(cfg.Databases, db)
 		} else {
 			db := cfg.Databases[idx]
-			deleted, err := editOneDatabase(&db, false)
+			deleted, err := editOneDatabase(&db, false, envVars)
 			if err != nil {
 				continue
 			}
@@ -206,7 +214,7 @@ func editDatabases(cfg *config.Config) error {
 	}
 }
 
-func editOneDatabase(db *config.DatabaseConfig, isNew bool) (deleted bool, err error) {
+func editOneDatabase(db *config.DatabaseConfig, isNew bool, envVars map[string]string) (deleted bool, err error) {
 	portStr := strconv.Itoa(db.Port)
 	if portStr == "0" {
 		portStr = ""
@@ -290,6 +298,7 @@ func editOneDatabase(db *config.DatabaseConfig, isNew bool) (deleted bool, err e
 					Value(&db.PasswordEnv),
 			))
 			_ = ignoreAbort(f.Run())
+			askEnvValue(db.PasswordEnv, envVars)
 		case "extra_opts":
 			f := huh.NewForm(huh.NewGroup(
 				huh.NewInput().
@@ -449,7 +458,7 @@ func editRetentionSection(title string, enabled *bool, keepLast, keepDays *int) 
 
 // ── Notifications ────────────────────────────────────────────────────────────
 
-func editNotifications(cfg *config.Config) error {
+func editNotifications(cfg *config.Config, envVars map[string]string) error {
 	n := &cfg.Notifications
 	for {
 		var section string
@@ -472,9 +481,9 @@ func editNotifications(cfg *config.Config) error {
 		case "general":
 			_ = editNotifGeneral(n)
 		case "telegram":
-			_ = editNotifTelegram(n)
+			_ = editNotifTelegram(n, envVars)
 		case "email":
-			_ = editNotifEmail(n)
+			_ = editNotifEmail(n, envVars)
 		}
 	}
 }
@@ -506,7 +515,7 @@ func editNotifGeneral(n *config.NotificationConfig) error {
 	}
 }
 
-func editNotifTelegram(n *config.NotificationConfig) error {
+func editNotifTelegram(n *config.NotificationConfig, envVars map[string]string) error {
 	t := &n.Telegram
 	for {
 		var choice string
@@ -533,6 +542,7 @@ func editNotifTelegram(n *config.NotificationConfig) error {
 				huh.NewInput().Title("Bot token env var (e.g. TELEGRAM_TOKEN)").Value(&t.BotTokenEnv),
 			))
 			_ = ignoreAbort(f.Run())
+			askEnvValue(t.BotTokenEnv, envVars)
 		case "chat_id":
 			f := huh.NewForm(huh.NewGroup(huh.NewInput().Title("Chat ID").Value(&t.ChatID)))
 			_ = ignoreAbort(f.Run())
@@ -540,7 +550,7 @@ func editNotifTelegram(n *config.NotificationConfig) error {
 	}
 }
 
-func editNotifEmail(n *config.NotificationConfig) error {
+func editNotifEmail(n *config.NotificationConfig, envVars map[string]string) error {
 	e := &n.Email
 	toStr := strings.Join(e.To, ", ")
 	smtpPortStr := intStr(e.SMTPPort)
@@ -600,11 +610,35 @@ func editNotifEmail(n *config.NotificationConfig) error {
 				huh.NewInput().Title("SMTP password env var (e.g. SMTP_PASS)").Value(&e.PasswordEnv),
 			))
 			_ = ignoreAbort(f.Run())
+			askEnvValue(e.PasswordEnv, envVars)
 		}
 	}
 }
 
 // ── helpers ──────────────────────────────────────────────────────────────────
+
+func askEnvValue(name string, envVars map[string]string) {
+	if name == "" {
+		return
+	}
+	existing := os.Getenv(name)
+	desc := fmt.Sprintf("Value will be saved to the env file alongside your config.")
+	if existing != "" {
+		desc = "Already set in environment. Leave blank to keep the existing value."
+	}
+	val := ""
+	f := huh.NewForm(huh.NewGroup(
+		huh.NewInput().
+			Title(fmt.Sprintf("Value for %s", name)).
+			Description(desc).
+			EchoMode(huh.EchoModePassword).
+			Value(&val),
+	))
+	_ = ignoreAbort(f.Run())
+	if val != "" {
+		envVars[name] = val
+	}
+}
 
 func ignoreAbort(err error) error {
 	if errors.Is(err, huh.ErrUserAborted) {

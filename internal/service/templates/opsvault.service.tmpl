@@ -5,6 +5,7 @@ After=network.target
 [Service]
 Type=simple
 User=root
+EnvironmentFile=-{{.EnvFilePath}}
 ExecStart={{.BinaryPath}} scheduler run --config {{.ConfigPath}}
 Restart=on-failure
 RestartSec=10s
