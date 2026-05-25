@@ -116,7 +116,7 @@ func (m *Manager) runOne(ctx context.Context, db config.DatabaseConfig) Result {
 	result := Result{Database: db.Name, Path: destPath, Duration: dur}
 
 	if m.cfg.Storage.Rclone.Enabled && m.uploader != nil {
-		if err := m.upload(ctx, db, destPath, start); err != nil {
+		if err := m.upload(ctx, db.Name, destPath, start); err != nil {
 			log.Error("upload failed", "error", err)
 			result.Err = err
 		}
@@ -150,8 +150,7 @@ func (m *Manager) runOnePath(ctx context.Context, p config.PathConfig) Result {
 	result := Result{Database: p.Name, Path: destPath, Duration: dur}
 
 	if m.cfg.Storage.Rclone.Enabled && m.uploader != nil {
-		fakeDB := config.DatabaseConfig{Name: p.Name}
-		if err := m.upload(ctx, fakeDB, destPath, start); err != nil {
+		if err := m.upload(ctx, p.Name, destPath, start); err != nil {
 			log.Error("upload failed", "error", err)
 			result.Err = err
 		}
@@ -218,11 +217,11 @@ func (m *Manager) recordHistory(start time.Time, r Result) {
 	_ = history.Append(m.cfg.BackupDir, e)
 }
 
-func (m *Manager) upload(ctx context.Context, db config.DatabaseConfig, localPath string, t time.Time) error {
+func (m *Manager) upload(ctx context.Context, name, localPath string, t time.Time) error {
 	hostname, _ := os.Hostname()
 	vars := map[string]string{
 		"hostname": hostname,
-		"name":     db.Name,
+		"name":     name,
 		"date":     t.UTC().Format("2006-01-02"),
 	}
 	if err := m.uploader.Upload(ctx, localPath, vars); err != nil {
