@@ -30,9 +30,7 @@ chmod +x /usr/local/bin/opsvault
 ## Quick start
 
 ```bash
-opsvault config init        # create /etc/opsvault/config.yaml
-opsvault config wizard      # interactive TUI to fill in databases, storage, notifications
-opsvault config validate    # check for errors
+opsvault config             # interactive TUI to create or edit the config
 opsvault backup run         # test a backup manually
 opsvault service install    # install as systemd service
 systemctl start opsvault
@@ -91,10 +89,9 @@ Full config reference: [opsvault.dev/docs/configuration](https://opsvault.dev/do
 | `opsvault backup list` | List local backup files |
 | `opsvault backup history` | Show backup history (success/failure log) |
 | `opsvault backup history --db myapp --limit 20` | Filter history by database |
-| `opsvault restore run --name myapp --file backup.sql.gz` | Restore a database from a backup file |
-| `opsvault config init` | Create default config at `/etc/opsvault/config.yaml` |
-| `opsvault config validate` | Validate the config file |
-| `opsvault config wizard` | Interactive terminal wizard to create or edit the config |
+| `opsvault restore` | Interactive wizard to restore from a local or remote backup |
+| `opsvault restore run --name myapp --file backup.sql.gz` | Restore non-interactively (scripting) |
+| `opsvault config` | Interactive terminal wizard to create or edit the config |
 | `opsvault service install` | Install and enable the systemd service |
 | `opsvault service uninstall` | Disable and remove the systemd service |
 | `opsvault service start` | Start the service |
@@ -105,7 +102,7 @@ Full config reference: [opsvault.dev/docs/configuration](https://opsvault.dev/do
 | `opsvault doctor` | Check that required tools are installed |
 | `opsvault version` | Print version and build info |
 
-Global flag: `--config` (default: `/etc/opsvault/config.yaml`)
+Global flag: `--config` (default: `/etc/opsvault/config.yaml` for root, `~/.config/opsvault/config.yaml` for non-root)
 
 ## How it works
 
